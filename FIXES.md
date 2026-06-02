@@ -115,8 +115,11 @@ The fixed behavior is:
 - A scroll region that starts at row 0 and ends above the viewport bottom scrolls in place.
 - Rows below the scroll region are preserved.
 - Only a full-screen scroll region contributes trimmed rows to scrollback.
+- `IL` / `CSI Ps L` and `DL` / `CSI Ps M` operate on active-buffer coordinates when scrollback exists.
 
 Prompt-oriented applications can reserve a bottom input/status row while allowing the output region above it to scroll. If a top-anchored partial region uses the scrollback path, the reserved prompt/status row can be promoted into scrollback and then reappear higher in the viewport when the terminal scrolls.
+
+The same class of artifact can occur when an application uses insert/delete-line sequences after the normal buffer has scrollback. `ScrollBottom` is viewport-relative, so direct list splices must include `YBase`; otherwise old scrollback rows can be edited instead of the active screen.
 
 ### Reserved bottom row is preserved
 
@@ -148,6 +151,7 @@ Assert.Equal(">", buffer.GetLine(4)?[0].Content);
   - Applied that translation to `CUP` / `HVP` and `VPA`.
   - Homed the cursor after `DECSTBM`.
   - Homed to the top margin when origin mode is enabled.
+  - Fixed `IL` / `DL` splice coordinates when normal-buffer scrollback exists.
 - `src/XTerm.NET.Tests/InputHandlerTests.cs`
   - Added regression tests for text-presentation checkmark width.
   - Added regression tests for emoji-presentation checkmark width.
@@ -163,6 +167,7 @@ Assert.Equal(">", buffer.GetLine(4)?[0].Content);
   - Restricted scrollback promotion to full-screen scroll regions.
 - `src/XTerm.NET.Tests/Buffer/BufferTests.cs`
   - Added regression coverage for preserving rows below top-anchored partial scroll regions.
+  - Added regression coverage for `IL` / `DL` preserving reserved rows with scrollback.
 
 ## Termrig compatibility note
 
@@ -179,7 +184,7 @@ dotnet test src/XTerm.NET.slnx --no-restore
 Result on this branch:
 
 ```text
-Passed: 598
+Passed: 600
 Failed: 0
 Skipped: 0
 ```
