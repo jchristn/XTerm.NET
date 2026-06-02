@@ -1026,7 +1026,7 @@ public class BufferTests
         SetCell(terminal.Buffer, yBase + 3, "D");
         SetCell(terminal.Buffer, yBase + 4, ">");
 
-        terminal.Write("\x1b[1;4r\x1b[1L");
+        terminal.Write("\x1b[1;4r\x1b[1;1H\x1b[1L");
 
         Assert.Equal(yBase, terminal.Buffer.YBase);
         Assert.True(terminal.Buffer.GetLine(yBase + 0)?[0].IsSpace());
@@ -1050,7 +1050,7 @@ public class BufferTests
         SetCell(terminal.Buffer, yBase + 3, "D");
         SetCell(terminal.Buffer, yBase + 4, ">");
 
-        terminal.Write("\x1b[1;4r\x1b[1M");
+        terminal.Write("\x1b[1;4r\x1b[1;1H\x1b[1M");
 
         Assert.Equal(yBase, terminal.Buffer.YBase);
         Assert.Equal("B", terminal.Buffer.GetLine(yBase + 0)?[0].Content);
