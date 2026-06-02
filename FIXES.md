@@ -8,6 +8,7 @@ Included upstream fixes:
 
 - Text-presentation emoji width for Docker-style progress rows.
 - DEC origin-mode cursor positioning with scroll regions.
+- Partial top-anchored scroll regions preserving rows below the bottom margin.
 
 ## Text-presentation emoji width
 
@@ -107,6 +108,38 @@ Assert.Equal(10, terminal.Buffer.X);
 Assert.Equal(3, terminal.Buffer.Y);
 ```
 
+## Top-anchored partial scroll regions
+
+The fixed behavior is:
+
+- A scroll region that starts at row 0 and ends above the viewport bottom scrolls in place.
+- Rows below the scroll region are preserved.
+- Only a full-screen scroll region contributes trimmed rows to scrollback.
+
+Prompt-oriented applications can reserve a bottom input/status row while allowing the output region above it to scroll. If a top-anchored partial region uses the scrollback path, the reserved prompt/status row can be promoted into scrollback and then reappear higher in the viewport when the terminal scrolls.
+
+### Reserved bottom row is preserved
+
+```csharp
+var buffer = new TerminalBuffer(10, 5, 100);
+
+SetCell(buffer, 0, "A");
+SetCell(buffer, 1, "B");
+SetCell(buffer, 2, "C");
+SetCell(buffer, 3, "D");
+SetCell(buffer, 4, ">");
+
+buffer.SetScrollRegion(0, 3);
+buffer.ScrollUp(1);
+
+Assert.Equal(0, buffer.YBase);
+Assert.Equal("B", buffer.GetLine(0)?[0].Content);
+Assert.Equal("C", buffer.GetLine(1)?[0].Content);
+Assert.Equal("D", buffer.GetLine(2)?[0].Content);
+Assert.True(buffer.GetLine(3)?[0].IsSpace());
+Assert.Equal(">", buffer.GetLine(4)?[0].Content);
+```
+
 ## Files changed
 
 - `src/XTerm.NET/InputHandler.cs`
@@ -126,6 +159,10 @@ Assert.Equal(3, terminal.Buffer.Y);
   - Added regression coverage for origin-relative `VPA`.
 - `src/XTerm.NET.Tests/ModeHandlingTests.cs`
   - Added regression coverage for enabling origin mode with a non-zero top margin.
+- `src/XTerm.NET/Buffer/TerminalBuffer.cs`
+  - Restricted scrollback promotion to full-screen scroll regions.
+- `src/XTerm.NET.Tests/Buffer/BufferTests.cs`
+  - Added regression coverage for preserving rows below top-anchored partial scroll regions.
 
 ## Termrig compatibility note
 
@@ -142,7 +179,7 @@ dotnet test src/XTerm.NET.slnx --no-restore
 Result on this branch:
 
 ```text
-Passed: 589
+Passed: 598
 Failed: 0
 Skipped: 0
 ```
