@@ -116,6 +116,7 @@ The fixed behavior is:
 - Rows below the scroll region are preserved.
 - Only a full-screen scroll region contributes trimmed rows to scrollback.
 - `IL` / `CSI Ps L` and `DL` / `CSI Ps M` operate on active-buffer coordinates when scrollback exists.
+- `DL` / `CSI Ps M` is ignored when the cursor is outside the scroll region, matching `IL`.
 
 Prompt-oriented applications can reserve a bottom input/status row while allowing the output region above it to scroll. If a top-anchored partial region uses the scrollback path, the reserved prompt/status row can be promoted into scrollback and then reappear higher in the viewport when the terminal scrolls.
 
@@ -152,6 +153,7 @@ Assert.Equal(">", buffer.GetLine(4)?[0].Content);
   - Homed the cursor after `DECSTBM`.
   - Homed to the top margin when origin mode is enabled.
   - Fixed `IL` / `DL` splice coordinates when normal-buffer scrollback exists.
+  - Guarded `DL` so it only applies inside the scroll region.
 - `src/XTerm.NET.Tests/InputHandlerTests.cs`
   - Added regression tests for text-presentation checkmark width.
   - Added regression tests for emoji-presentation checkmark width.
@@ -168,6 +170,7 @@ Assert.Equal(">", buffer.GetLine(4)?[0].Content);
 - `src/XTerm.NET.Tests/Buffer/BufferTests.cs`
   - Added regression coverage for preserving rows below top-anchored partial scroll regions.
   - Added regression coverage for `IL` / `DL` preserving reserved rows with scrollback.
+  - Added regression coverage for `DL` outside a scroll region preserving a reserved prompt row.
 
 ## Termrig compatibility note
 
@@ -184,7 +187,7 @@ dotnet test src/XTerm.NET.slnx --no-restore
 Result on this branch:
 
 ```text
-Passed: 600
+Passed: 601
 Failed: 0
 Skipped: 0
 ```
